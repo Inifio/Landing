@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="dataSourceStorageLocal">
+    <data-source name="restream-landing@localhost" uuid="c3eebaac-7766-49e8-9b1f-bcb1fd2c66a6">
+      <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="MYSQL" exact-version="0" />
+      <secret-storage>master_key</secret-storage>
+      <user-name>smart-dash</user-name>
+    </data-source>
+  </component>
+</project>

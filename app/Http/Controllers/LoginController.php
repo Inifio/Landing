@@ -167,11 +167,15 @@ class LoginController extends Controller
             for($j = 0; $j < count($platform_ids); $j++) {
                 if($platform_ids[$j]["id"] == $channels[$i]["streamingPlatformId"]) {
                     // Enable embed if there's an embedable platform
-                    if($embedPlayer == "" && $channels[$i]["enabled"] === true && $channels[$i]["embedUrl"] !== "") {
+                    if($embedPlayer === null && $channels[$i]["enabled"] === true && $channels[$i]["embedUrl"] !== "") {
+                        //dd($channels[$i]);
                         $embedPlayer = [
                            "embedEnabled" => true,
-                           "embedURL" => $channels[$i]["embedUrl"]
+                           "platform" => $platform_ids[$j]["name"],
+                           "embedURL" => $channels[$i]["embedUrl"],
+                            "displayName" => $channels[$i]["displayName"],
                         ];
+                        //dd($embedPlayer);
                     }
                     array_push($channelList, [
                         "platformId" =>  $platform_ids[$j]["name"],

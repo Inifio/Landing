@@ -10,8 +10,30 @@
         @if(count($channels) > 0)
             @if($embed["embedEnabled"] === true)
                 <div>
-                    <iframe src="{{ $embed["embedURL"] }}" muted=true style="width:100%;height:40em;border:0px;overflow:hidden;padding-top:15px"></iframe>
+                    @switch($embed["platform"])
+                        @case("Mixer")
+                            <h2>Mixer Stream</h2>
+                            <iframe src="{{ $embed["embedURL"] }}" muted=true style="width:100%;height:40em;border:0px;overflow:hidden;padding-top:15px"></iframe>
+                        @break
+                        @case("Twitch")
+                            <h2>Twitch Stream</h2>
+                            <iframe
+                                src="https://player.twitch.tv/?{{$embed["displayName"]}}"
+                                style="width:100%;height:40em;border:0px;overflow:hidden;padding-top:15px"
+                                height="300px"
+                                frameborder="0"
+                                allowfullscreen="true">
+                        </iframe>
+                        @break
+                    @endswitch
                 </div>
+
+                {{--@if($embed["platform"] === "Mixer")
+                    <div>
+                        <iframe src="{{ $embed["embedURL"] }}" muted=true style="width:100%;height:40em;border:0px;overflow:hidden;padding-top:15px"></iframe>
+                    </div>
+                @endif--}}
+
             @endif
             <h2>Enabled Channels</h2>
             @foreach ($channels as $channel)

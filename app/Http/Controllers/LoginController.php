@@ -17,6 +17,7 @@ class LoginController extends Controller
     public function store() {
         $client = new Client();
         $returnedCode = request('code');
+
         try {
             $response = $client->request('POST', 'https://api.restream.io/oauth/token', [
                 'form_params' => [
@@ -32,7 +33,6 @@ class LoginController extends Controller
             $response = json_decode($response->getBody()->getContents(), true);
         } catch (GuzzleException $e) {
             $errorMessage = $e->getMessage();
-            $exceptionMessage = __METHOD__ . ". Received ServerException: $errorMessage";
             if (!$e->hasResponse()) {
                 $exceptionMessage =
                     __METHOD__ . '. Received invalid response from Twitch API: ' . $errorMessage .
@@ -216,8 +216,6 @@ class LoginController extends Controller
             $response = $e;
         }
 
-        // TODO: Handle auto-refresh
-
         DB::table('users')
             ->where('id', $user->id)
             ->update([
@@ -226,5 +224,9 @@ class LoginController extends Controller
                 'refresh_code' => $response["refresh_token"],
                 'refresh_code_epoch' => $response["refreshTokenExpiresEpoch"]
             ]);
+
+        return redirect()->action(
+            'LoginController@show', ['username' => $username]
+        );
     }
 }

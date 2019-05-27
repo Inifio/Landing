@@ -45,9 +45,11 @@ class LoginController extends Controller
                 );
             }
         } catch (GuzzleException $e) {
-
+            // TODO: Setup exceptions
         }
 
+
+        // Creating a new user and saving it to the database
         $user = new Users();
         $user->id = $profileData["id"];
         $user->username = $profileData["username"];
@@ -67,7 +69,9 @@ class LoginController extends Controller
 
     public function show($username) {
         $client  = new Client();
-        $user = DB::table('users')->where('username', $username)->first();
+        $user = DB::table('users')
+            ->where('username', $username)
+            ->first();
 
         //dd($user);
 
@@ -132,7 +136,7 @@ class LoginController extends Controller
 
     private function refreshToken($username) {
         $user = DB::table('users')->where('username', $username)->first();
-
+        //dd($user);
         $client = new Client();
 
         try {
@@ -140,7 +144,7 @@ class LoginController extends Controller
                 'form_params' => [
                     'grant_type'    => 'refresh_token',
                     'redirect_uri'  => 'http://127.0.0.1:8000/login/token',
-                    'refresh_token'          => $user->refresh_code
+                    'refresh_token' => $user->refresh_code
                 ],
                 'auth' => [
                     '3b5d20d7-2860-49da-bf54-e4f8c6dad488',
@@ -153,5 +157,16 @@ class LoginController extends Controller
             // TODO: Setup exceptions
             $response = $e;
         }
+
+        // TODO: Handle auto-refresh
+
+        DB::table('users')
+            ->where('id', $user->id)
+            ->update([
+                'auth_code' => $response["access_token"],
+                'auth_code_epoch' => $response["accessTokenExpiresEpoch"],
+                'refresh_code' => $response["refresh_token"],
+                'refresh_code_epoch' => $response["refreshTokenExpiresEpoch"]
+            ]);
     }
 }

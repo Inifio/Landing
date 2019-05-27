@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use \GuzzleHttp\Exception\ServerException;
 use \GuzzleHttp\Client;
 use \GuzzleHttp\Exception\GuzzleException;
+use \GuzzleHttp\Psr7;
 use Carbon\Carbon;
 
 use App\Users;
@@ -29,7 +31,22 @@ class LoginController extends Controller
             ]);
             $response = json_decode($response->getBody()->getContents(), true);
         } catch (GuzzleException $e) {
-            // TODO: Setup exceptions
+            $errorMessage = $e->getMessage();
+            $exceptionMessage = __METHOD__ . ". Received ServerException: $errorMessage";
+            if (!$e->hasResponse()) {
+                $exceptionMessage =
+                    __METHOD__ . '. Received invalid response from Twitch API: ' . $errorMessage .
+                    '. Response: No response.';
+                return redirect("/")->with('error', $exceptionMessage);
+            }
+
+            $response = $e->getResponse();
+
+            $responseBody = $response->getBody();
+            $responseDecoded = json_decode($responseBody, true);
+
+            //dd($responseDecoded);
+            return redirect("/")->with('error', $responseDecoded["error"]["message"]);
         }
 
         try {
@@ -45,7 +62,22 @@ class LoginController extends Controller
                 );
             }
         } catch (GuzzleException $e) {
-            // TODO: Setup exceptions
+            $errorMessage = $e->getMessage();
+            $exceptionMessage = __METHOD__ . ". Received ServerException: $errorMessage";
+            if (!$e->hasResponse()) {
+                $exceptionMessage =
+                    __METHOD__ . '. Received invalid response from Twitch API: ' . $errorMessage .
+                    '. Response: No response.';
+                return redirect("/")->with('error', $exceptionMessage);
+            }
+
+            $response = $e->getResponse();
+
+            $responseBody = $response->getBody();
+            $responseDecoded = json_decode($responseBody, true);
+
+            //dd($responseDecoded);
+            return redirect("/")->with('error', $responseDecoded["error"]["message"]);
         }
 
 
@@ -89,14 +121,44 @@ class LoginController extends Controller
             ]);
             $channels = json_decode($channels->getBody()->getContents(), true);
         } catch (GuzzleException $e) {
-            // TODO: Setup exceptions
+            $errorMessage = $e->getMessage();
+            $exceptionMessage = __METHOD__ . ". Received ServerException: $errorMessage";
+            if (!$e->hasResponse()) {
+                $exceptionMessage =
+                    __METHOD__ . '. Received invalid response from Twitch API: ' . $errorMessage .
+                    '. Response: No response.';
+                return redirect("/")->with('error', $exceptionMessage);
+            }
+
+            $response = $e->getResponse();
+
+            $responseBody = $response->getBody();
+            $responseDecoded = json_decode($responseBody, true);
+
+            //dd($responseDecoded);
+            return redirect("/")->with('error', $responseDecoded["error"]["message"]);
         }
 
         try {   // Get list of platforms and IDs
             $response = $client->request('GET', 'https://api.restream.io/v2/platform/all');
             $platform_ids = json_decode($response->getBody()->getContents(), true);
         } catch(GuzzleException $e) {
-            // TODO: Setup exceptions
+            $errorMessage = $e->getMessage();
+            $exceptionMessage = __METHOD__ . ". Received ServerException: $errorMessage";
+            if (!$e->hasResponse()) {
+                $exceptionMessage =
+                    __METHOD__ . '. Received invalid response from Twitch API: ' . $errorMessage .
+                    '. Response: No response.';
+                return redirect("/")->with('error', $exceptionMessage);
+            }
+
+            $response = $e->getResponse();
+
+            $responseBody = $response->getBody();
+            $responseDecoded = json_decode($responseBody, true);
+
+            //dd($responseDecoded);
+            return redirect("/")->with('error', $responseDecoded["error"]["message"]);
         }
 
         $channelList = array(); // Creating array for use bellow
@@ -104,17 +166,13 @@ class LoginController extends Controller
         for ($i = 0; $i < count($channels); $i++) {
             for($j = 0; $j < count($platform_ids); $j++) {
                 if($platform_ids[$j]["id"] == $channels[$i]["streamingPlatformId"]) {
+                    // Enable embed if there's an embedable platform
                     if($embedPlayer == "" && $channels[$i]["enabled"] === true && $channels[$i]["embedUrl"] !== "") {
                         $embedPlayer = [
                            "embedEnabled" => true,
                            "embedURL" => $channels[$i]["embedUrl"]
                         ];
-                    } /*else {
-                        array_push($embedPlayer, [
-                            "embedEnabled" => false,
-                            "embedURL" => ""
-                        ]);
-                    }*/
+                    }
                     array_push($channelList, [
                         "platformId" =>  $platform_ids[$j]["name"],
                         "platformImage" => $platform_ids[$j]["image"]["png"],

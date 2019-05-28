@@ -2,15 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use \GuzzleHttp\Exception\ServerException;
 use \GuzzleHttp\Client;
 use \GuzzleHttp\Exception\GuzzleException;
-use \GuzzleHttp\Psr7;
 use Carbon\Carbon;
 
 use App\Users;
 use DB;
+use Auth;
 
 class LoginController extends Controller
 {
@@ -35,7 +33,7 @@ class LoginController extends Controller
             $errorMessage = $e->getMessage();
             if (!$e->hasResponse()) {
                 $exceptionMessage =
-                    __METHOD__ . '. Received invalid response from Twitch API: ' . $errorMessage .
+                    __METHOD__ . '. Received invalid response from API: ' . $errorMessage .
                     '. Response: No response.';
                 return redirect("/")->with('error', $exceptionMessage);
             }
@@ -57,6 +55,7 @@ class LoginController extends Controller
             ]);
             $profileData = json_decode($profileData->getBody()->getContents(), true);
             if ($user = DB::table('users')->where('username', $profileData["username"])->first()) {
+                Auth::loginUsingId($profileData["id"]);
                 return redirect()->action(
                     'LoginController@show', ['username' => $profileData["username"]]
                 );
@@ -66,7 +65,7 @@ class LoginController extends Controller
             $exceptionMessage = __METHOD__ . ". Received ServerException: $errorMessage";
             if (!$e->hasResponse()) {
                 $exceptionMessage =
-                    __METHOD__ . '. Received invalid response from Twitch API: ' . $errorMessage .
+                    __METHOD__ . '. Received invalid response from API: ' . $errorMessage .
                     '. Response: No response.';
                 return redirect("/")->with('error', $exceptionMessage);
             }
@@ -80,6 +79,7 @@ class LoginController extends Controller
             return redirect("/")->with('error', $responseDecoded["error"]["message"]);
         }
 
+        Auth::loginUsingId($profileData["id"]);
 
         // Creating a new user and saving it to the database
         $user = new Users();
@@ -92,7 +92,7 @@ class LoginController extends Controller
         $user->refresh_code_epoch = $response["refreshTokenExpiresEpoch"];
         $user->save();
 
-        //dd($profileData);
+        Auth::loginUsingId($profileData["id"]);
 
         return redirect()->action(
             'LoginController@show', ['username' => $profileData["username"]]
@@ -125,7 +125,7 @@ class LoginController extends Controller
             $exceptionMessage = __METHOD__ . ". Received ServerException: $errorMessage";
             if (!$e->hasResponse()) {
                 $exceptionMessage =
-                    __METHOD__ . '. Received invalid response from Twitch API: ' . $errorMessage .
+                    __METHOD__ . '. Received invalid response from API: ' . $errorMessage .
                     '. Response: No response.';
                 return redirect("/")->with('error', $exceptionMessage);
             }
@@ -147,13 +147,12 @@ class LoginController extends Controller
             $exceptionMessage = __METHOD__ . ". Received ServerException: $errorMessage";
             if (!$e->hasResponse()) {
                 $exceptionMessage =
-                    __METHOD__ . '. Received invalid response from Twitch API: ' . $errorMessage .
+                    __METHOD__ . '. Received invalid response from API: ' . $errorMessage .
                     '. Response: No response.';
                 return redirect("/")->with('error', $exceptionMessage);
             }
 
             $response = $e->getResponse();
-
             $responseBody = $response->getBody();
             $responseDecoded = json_decode($responseBody, true);
 
@@ -161,11 +160,15 @@ class LoginController extends Controller
             return redirect("/")->with('error', $responseDecoded["error"]["message"]);
         }
 
-        $channelList = array(); // Creating array for use bellow
+        //
+
+        $enabledChannels = array(); // Creating array for enabled channels
+        $disabledChannels = array(); // Creating array for disabled channels
         $embedPlayer = null;
+        $channelCount = count($channels);
         for ($i = 0; $i < count($channels); $i++) {
             for($j = 0; $j < count($platform_ids); $j++) {
-                if($platform_ids[$j]["id"] == $channels[$i]["streamingPlatformId"]) {
+                if($platform_ids[$j]["id"] == $channels[$i]["streamingPlatformId"] && $channels[$i]["enabled"] === true) {
                     // Enable embed if there's an embedable platform
                     if($embedPlayer === null && $channels[$i]["enabled"] === true && $channels[$i]["embedUrl"] !== "") {
                         //dd($channels[$i]);
@@ -177,12 +180,22 @@ class LoginController extends Controller
                         ];
                         //dd($embedPlayer);
                     }
-                    array_push($channelList, [
+                    array_push($enabledChannels, [
                         "platformId" =>  $platform_ids[$j]["name"],
                         "platformImage" => $platform_ids[$j]["image"]["png"],
                         "url" => $channels[$i]["url"],
                         "displayName" => $channels[$i]["displayName"],
-                        "enabled" => $channels[$i]["enabled"]
+                        "enabled" => $channels[$i]["enabled"],
+                        "channelCount" => $channelCount,
+                    ]);
+                } else if ($platform_ids[$j]["id"] == $channels[$i]["streamingPlatformId"]) {
+                    array_push($disabledChannels, [
+                        "platformId" =>  $platform_ids[$j]["name"],
+                        "platformImage" => $platform_ids[$j]["image"]["png"],
+                        "url" => $channels[$i]["url"],
+                        "displayName" => $channels[$i]["displayName"],
+                        "enabled" => $channels[$i]["enabled"],
+                        "channelCount" => $channelCount,
                     ]);
                 }
             }
@@ -190,8 +203,10 @@ class LoginController extends Controller
 
         //dd($embedPlayer);
         return \response()->view('show', [
-            'channels' => $channelList,
-            'embed' => $embedPlayer
+            'channels' => $enabledChannels,
+            'disabledChannels' => $disabledChannels,
+            'embed' => $embedPlayer,
+            'user' => $username
         ]);
 
     }
@@ -232,5 +247,9 @@ class LoginController extends Controller
         return redirect()->action(
             'LoginController@show', ['username' => $username]
         );
+    }
+
+    public static function edit() {
+
     }
 }

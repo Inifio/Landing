@@ -102,7 +102,7 @@ class LoginController extends Controller
             'LoginController@show', ['username' => $profileData["username"]]
         );
     }
-
+    
     public function show($username) {
         $client  = new Client();
         $user = DB::table('users')
@@ -116,10 +116,10 @@ class LoginController extends Controller
         //dd($user);
 
         // Check the expiration of the access code, if expired, get a new one
-        $current_timestamp = Carbon::now()->timestamp;
+        /*$current_timestamp = Carbon::now()->timestamp;
         if ($current_timestamp >= $user->auth_code_epoch) {
             $this->refreshToken($username);
-        }
+        }*/
 
         try {   // Getting a list of channels user has added on Restream
             $channels = $client->request('GET', 'https://api.restream.io/v2/user/channel/all', [
@@ -131,20 +131,28 @@ class LoginController extends Controller
         } catch (GuzzleException $e) {
             $errorMessage = $e->getMessage();
             $exceptionMessage = __METHOD__ . ". Received ServerException: $errorMessage";
-            if (!$e->hasResponse()) {
-                $exceptionMessage =
-                    __METHOD__ . '. Received invalid response from API: ' . $errorMessage .
-                    '. Response: No response.';
-                return redirect("/")->with('error', $exceptionMessage);
+            switch($e->getResponse()->getstatusCode()) {
+                case 401:
+                    $this->refreshToken($username);
+                    return redirect("/show/{$username}");
+                    break;
+                default:
+                    if (!$e->hasResponse()) {
+                        $exceptionMessage =
+                            __METHOD__ . '. Received invalid response from API: ' . $errorMessage .
+                            '. Response: No response.';
+                        return redirect("/")->with('error', $exceptionMessage);
+                    }
+
+                    $response = $e->getResponse();
+
+                    $responseBody = $response->getBody();
+                    $responseDecoded = json_decode($responseBody, true);
+
+                    //dd($responseDecoded);
+                    return redirect("/")->with('error', $responseDecoded["error"]["message"]);
+                    break;
             }
-
-            $response = $e->getResponse();
-
-            $responseBody = $response->getBody();
-            $responseDecoded = json_decode($responseBody, true);
-
-            //dd($responseDecoded);
-            return redirect("/")->with('error', $responseDecoded["error"]["message"]);
         }
 
         try {   // Get list of platforms and IDs
@@ -254,9 +262,7 @@ class LoginController extends Controller
                 'refresh_code_epoch' => $response["refreshTokenExpiresEpoch"]
             ]);
 
-        return redirect()->action(
-            'LoginController@show', ['username' => $username]
-        );
+        return redirect('/show/'.$username);
     }
 
     public static function enableChannel($username, $channelId) {

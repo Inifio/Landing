@@ -16,6 +16,10 @@ class LoginController extends Controller
         $client = new Client();
         $returnedCode = request('code');
 
+        if($returnedCode === null) {
+            return redirect("/")->with('error', "Error: Authentication Declined");
+        }
+
         try {
             $response = $client->request('POST', 'https://api.restream.io/oauth/token', [
                 'form_params' => [
@@ -35,7 +39,7 @@ class LoginController extends Controller
                 $exceptionMessage =
                     __METHOD__ . '. Received invalid response from API: ' . $errorMessage .
                     '. Response: No response.';
-                return redirect("/")->with('error', $exceptionMessage);
+                return redirect("/")->with('error', 'Error:'.$exceptionMessage);
             }
 
             $response = $e->getResponse();
@@ -104,6 +108,10 @@ class LoginController extends Controller
         $user = DB::table('users')
             ->where('username', $username)
             ->first();
+
+        if($user === null) {
+            return redirect("/")->with('error', 'Error: User not found');
+        }
 
         //dd($user);
 
@@ -309,5 +317,11 @@ class LoginController extends Controller
         }
 
         return redirect("/show/".$username);
+    }
+
+    public static function destroy() {
+        $userId = Auth::id();
+        DB::table('users')->where('id', $userId)->delete();
+        return redirect("/");
     }
 }

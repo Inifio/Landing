@@ -34,3 +34,4 @@ Route::get('/show/{username}', 'LoginController@show');
 
 Route::get('/enable/{username}/{channelId}', 'LoginController@enableChannel');
 Route::get('/disable/{username}/{channelId}', 'LoginController@disableChannel');
+Route::get('/remove_account', 'LoginController@destroy');

@@ -24,6 +24,9 @@
 
             @auth
                 <a class="btn btn-danger" href="/logout" role="button">Logout</a>
+                <div style="padding-left: 5px;">
+                    <a class="btn btn-danger" style="padding-left: 5px;" href="/remove_account" role="button">Remove Account</a>
+                </div>
             @endauth
             @guest
                 <a class="btn btn-primary" href="/login" role="button">Login</a>

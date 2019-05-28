@@ -102,7 +102,7 @@ class LoginController extends Controller
             'LoginController@show', ['username' => $profileData["username"]]
         );
     }
-    
+
     public function show($username) {
         $client  = new Client();
         $user = DB::table('users')

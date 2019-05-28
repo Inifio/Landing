@@ -18,6 +18,9 @@ use \GuzzleHttp\Exception\ServerException;
 */
 
 Route::get('/', function () {
+    if(Auth::check()) {
+        return redirect('/show/'.Auth::user()->username);
+    }
     return view('welcome');
 });
 
@@ -28,3 +31,6 @@ Route::get('/login', function () {
 });
 
 Route::get('/show/{username}', 'LoginController@show');
+
+Route::get('/enable/{username}/{channelId}', 'LoginController@enableChannel');
+Route::get('/disable/{username}/{channelId}', 'LoginController@disableChannel');

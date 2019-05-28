@@ -181,7 +181,8 @@ class LoginController extends Controller
                         //dd($embedPlayer);
                     }
                     array_push($enabledChannels, [
-                        "platformId" =>  $platform_ids[$j]["name"],
+                        "platformName" =>  $platform_ids[$j]["name"],
+                        "platformId" => $channels[$i]["id"],
                         "platformImage" => $platform_ids[$j]["image"]["png"],
                         "url" => $channels[$i]["url"],
                         "displayName" => $channels[$i]["displayName"],
@@ -190,7 +191,8 @@ class LoginController extends Controller
                     ]);
                 } else if ($platform_ids[$j]["id"] == $channels[$i]["streamingPlatformId"]) {
                     array_push($disabledChannels, [
-                        "platformId" =>  $platform_ids[$j]["name"],
+                        "platformName" =>  $platform_ids[$j]["name"],
+                        "platformId" => $channels[$i]["id"],
                         "platformImage" => $platform_ids[$j]["image"]["png"],
                         "url" => $channels[$i]["url"],
                         "displayName" => $channels[$i]["displayName"],
@@ -249,7 +251,63 @@ class LoginController extends Controller
         );
     }
 
-    public static function edit() {
+    public static function enableChannel($username, $channelId) {
+        $client = new Client();
 
+        if(Auth::user()->username !== $username) {
+            return redirect("/")->with('error', 'ERROR: Not permitted');
+        } else {
+            $user = DB::table('users')->where('username', $username)->first();
+        }
+
+        try {
+            $client->request('PATCH', 'https://api.restream.io/v2/user/channel/' . $channelId, [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $user->auth_code
+                ],
+                'json' => [
+                    "active" => true,
+                ]
+            ]);
+        } catch (GuzzleException $e) {
+            $response = $e->getResponse();
+            $responseBody = $response->getBody();
+            $responseDecoded = json_decode($responseBody, true);
+
+            //dd($responseDecoded);
+            return redirect("/")->with('error', $responseDecoded["error"]["message"]);
+        }
+
+        return redirect("/show/".$username);
+    }
+
+    public static function disableChannel($username, $channelId) {
+        $client = new Client();
+
+        if(Auth::user()->username !== $username) {
+            return redirect("/")->with('error', 'ERROR: Not permitted');
+        } else {
+            $user = DB::table('users')->where('username', $username)->first();
+        }
+
+        try {
+            $client->request('PATCH', 'https://api.restream.io/v2/user/channel/' . $channelId, [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $user->auth_code
+                ],
+                'json' => [
+                    "active" => false,
+                ]
+            ]);
+        } catch (GuzzleException $e) {
+            $response = $e->getResponse();
+            $responseBody = $response->getBody();
+            $responseDecoded = json_decode($responseBody, true);
+
+            //dd($responseDecoded);
+            return redirect("/")->with('error', $responseDecoded["error"]["message"]);
+        }
+
+        return redirect("/show/".$username);
     }
 }

@@ -2,12 +2,7 @@
 
 @section('content')
     <div>
-
-        {{--@php
-            var_dump($channels["id"]);
-        @endphp--}}
-
-        @if(count($channels) > 0)
+        @if(count($channels) > 0 || Auth::user()->username === $user)
             @if($embed["embedEnabled"] === true)
                 <br/>
                 <div>
@@ -39,13 +34,13 @@
                                 <img style="width:50px;height:50px;" src="{{$channel["platformImage"]}}">
                             </div>
                             <div class="col-md-9 col-sm-8">
-                                <h3><a href="{{$channel["url"]}}" target="_blank">{{$channel["platformId"]}}</a></h3>
+                                <h3><a href="{{$channel["url"]}}" target="_blank">{{$channel["platformName"]}}</a></h3>
                                 <small>{{$channel["displayName"]}}</small>
                             </div>
                             <div>
                                 @auth
                                     @if(Auth::user()->username === $user)
-                                        <a class="btn btn-primary" href="{{$channel["url"]}}" role="button" target="_blank">Disable</a>
+                                        <a class="btn btn-primary" href="/disable/{{$user}}/{{$channel["platformId"]}}" role="button">Disable</a>
                                     @endif
                                 @endauth
                                 @if($channel["url"] !== "" && substr($channel["url"], -3) !== "/me" && $channel["enabled"] === true)
@@ -55,7 +50,6 @@
                         </div>
                 </div>
             @endforeach
-
             @auth
                 @if(Auth::user()->username === $user)
                     <br/>
@@ -68,12 +62,12 @@
                                         <img style="width:50px;height:50px;" src="{{$disabledChannel["platformImage"]}}">
                                     </div>
                                     <div class="col-md-9 col-sm-8">
-                                        <h3><a href="{{$disabledChannel["url"]}}" target="_blank">{{$disabledChannel["platformId"]}}</a></h3>
+                                        <h3><a href="{{$disabledChannel["url"]}}" target="_blank">{{$disabledChannel["platformName"]}}</a></h3>
                                         <small>{{$disabledChannel["displayName"]}}</small>
                                     </div>
                                     <div>
                                         @if(Auth::user()->username === $user)
-                                            <a class="btn btn-primary" href="{{$channel["url"]}}" role="button" target="_blank">Enable</a>
+                                            <a class="btn btn-primary" href="/enable/{{$user}}/{{$disabledChannel["platformId"]}}" role="button">Enable</a>
                                         @endif
                                         @if($disabledChannel["url"] !== "" && substr($disabledChannel["url"], -3) !== "/me" && $disabledChannel["enabled"] === true)
                                             <a class="btn btn-primary" href="{{$disabledChannel["url"]}}" role="button" target="_blank">></a>
@@ -84,7 +78,6 @@
                     @endforeach
                 @endif
             @endauth
-            {{--{{$posts->links()}}--}}
         @else
             <div class="row align-items-center justify-content-center">
                 <div class="col" style="padding-top: 25em;">
@@ -97,5 +90,5 @@
                 </div>
             </div>
         @endif
-    <div>
+    </div>
 @endsection

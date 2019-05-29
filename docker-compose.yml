@@ -24,5 +24,5 @@ services:
     ports:
       - "4001:3306"
     volumes:
-      - ../website/docker/restream-website-db/data:/var/lib/mysql
-      - ../website/docker/restream-website-db/log:/var/log/mysql
+      - ./docker/db/data:/var/lib/mysql
+      - ./docker/db/log:/var/log/mysql

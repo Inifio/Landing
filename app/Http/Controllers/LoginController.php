@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use \GuzzleHttp\Client;
 use \GuzzleHttp\Exception\GuzzleException;
-use Carbon\Carbon;
 
 use App\Users;
 use DB;
@@ -16,6 +15,8 @@ class LoginController extends Controller
         $client = new Client();
         $returnedCode = request('code');
 
+
+        dd(request('code'));
         if($returnedCode === null) {
             return redirect("/")->with('error', "Error: Authentication Declined");
         }
@@ -46,7 +47,7 @@ class LoginController extends Controller
             $responseBody = $response->getBody();
             $responseDecoded = json_decode($responseBody, true);
 
-            //dd($responseDecoded);
+            dd($responseDecoded);
             return redirect("/")->with('error', $responseDecoded["error"]["message"]);
         }
 
@@ -78,7 +79,7 @@ class LoginController extends Controller
             $responseBody = $response->getBody();
             $responseDecoded = json_decode($responseBody, true);
 
-            //dd($responseDecoded);
+            dd($responseDecoded);
             return redirect("/")->with('error', $responseDecoded["error"]["message"]);
         }
 

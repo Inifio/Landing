@@ -15,8 +15,6 @@ class LoginController extends Controller
         $client = new Client();
         $returnedCode = request('code');
 
-
-        dd(request('code'));
         if($returnedCode === null) {
             return redirect("/")->with('error', "Error: Authentication Declined");
         }

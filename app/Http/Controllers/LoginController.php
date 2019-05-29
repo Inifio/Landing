@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use \GuzzleHttp\Client;
 use \GuzzleHttp\Exception\GuzzleException;
-use Carbon\Carbon;
 
 use App\Users;
 use DB;
@@ -24,7 +23,7 @@ class LoginController extends Controller
             $response = $client->request('POST', 'https://api.restream.io/oauth/token', [
                 'form_params' => [
                     'grant_type'    => 'authorization_code',
-                    'redirect_uri'  => 'http://127.0.0.1:8000/login/token',
+                    'redirect_uri'  => 'http://localhost:4000/login/token',
                     'code'          => $returnedCode
                 ],
                 'auth' => [
@@ -34,6 +33,7 @@ class LoginController extends Controller
             ]);
             $response = json_decode($response->getBody()->getContents(), true);
         } catch (GuzzleException $e) {
+            //dd($e);
             $errorMessage = $e->getMessage();
             if (!$e->hasResponse()) {
                 $exceptionMessage =
@@ -42,12 +42,10 @@ class LoginController extends Controller
                 return redirect("/")->with('error', 'Error:'.$exceptionMessage);
             }
 
-            $response = $e->getResponse();
-
             $responseBody = $response->getBody();
             $responseDecoded = json_decode($responseBody, true);
 
-            //dd($responseDecoded);
+            dd($responseDecoded);
             return redirect("/")->with('error', $responseDecoded["error"]["message"]);
         }
 
@@ -79,7 +77,7 @@ class LoginController extends Controller
             $responseBody = $response->getBody();
             $responseDecoded = json_decode($responseBody, true);
 
-            //dd($responseDecoded);
+            dd($responseDecoded);
             return redirect("/")->with('error', $responseDecoded["error"]["message"]);
         }
 
@@ -129,6 +127,7 @@ class LoginController extends Controller
             ]);
             $channels = json_decode($channels->getBody()->getContents(), true);
         } catch (GuzzleException $e) {
+            //dd($e);
             $errorMessage = $e->getMessage();
             $exceptionMessage = __METHOD__ . ". Received ServerException: $errorMessage";
             switch($e->getResponse()->getstatusCode()) {
@@ -155,10 +154,53 @@ class LoginController extends Controller
             }
         }
 
+        $params = [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $user->auth_code
+            ]
+        ];
+
+        try {   // Getting a list of channels user has added on Restream
+            $channels = $client->request('GET', 'https://api.restream.io/v2/user/channel/all', [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $user->auth_code
+                ]
+            ]);
+            $channels = json_decode($channels->getBody()->getContents(), true);
+        } catch (GuzzleException $e) {
+            //dd($e);
+            $errorMessage = $e->getMessage();
+            $exceptionMessage = __METHOD__ . ". Received ServerException: $errorMessage";
+            switch($e->getResponse()->getstatusCode()) {
+                case 401:
+                    $this->refreshToken($username);
+                    return redirect("/show/{$username}");
+                    break;
+                default:
+                    if (!$e->hasResponse()) {
+                        $exceptionMessage =
+                            __METHOD__ . '. Received invalid response from API: ' . $errorMessage .
+                            '. Response: No response.';
+                        return redirect("/")->with('error', $exceptionMessage);
+                    }
+
+                    $response = $e->getResponse();
+
+                    $responseBody = $response->getBody();
+                    $responseDecoded = json_decode($responseBody, true);
+
+                    //dd($responseDecoded);
+                    return redirect("/")->with('error', $responseDecoded["error"]["message"]);
+                    break;
+            }
+        }
+
+
         try {   // Get list of platforms and IDs
             $response = $client->request('GET', 'https://api.restream.io/v2/platform/all');
             $platform_ids = json_decode($response->getBody()->getContents(), true);
         } catch(GuzzleException $e) {
+            //dd($e);
             $errorMessage = $e->getMessage();
             $exceptionMessage = __METHOD__ . ". Received ServerException: $errorMessage";
             if (!$e->hasResponse()) {
@@ -198,6 +240,7 @@ class LoginController extends Controller
                     }
                     array_push($enabledChannels, [
                         "platformName" =>  $platform_ids[$j]["name"],
+                        "platformTitle" => $client->request('GET', 'https://api.restream.io/v2/user/channel-meta/'.$channels[$i]["id"], $params),
                         "platformId" => $channels[$i]["id"],
                         "platformImage" => $platform_ids[$j]["image"]["png"],
                         "url" => $channels[$i]["url"],
@@ -238,7 +281,7 @@ class LoginController extends Controller
             $response = $client->request('POST', 'https://api.restream.io/oauth/token', [
                 'form_params' => [
                     'grant_type'    => 'refresh_token',
-                    'redirect_uri'  => 'http://127.0.0.1:8000/login/token',
+                    'redirect_uri'  => 'http://localhost:4000/login/token',
                     'refresh_token' => $user->refresh_code
                 ],
                 'auth' => [
@@ -249,6 +292,7 @@ class LoginController extends Controller
             $response = json_decode($response->getBody()->getContents(), true);
 
         } catch (GuzzleException $e) {
+            //dd($e);
             // TODO: Setup exceptions
             $response = $e;
         }
@@ -284,6 +328,7 @@ class LoginController extends Controller
                 ]
             ]);
         } catch (GuzzleException $e) {
+            //dd($e);
             $response = $e->getResponse();
             $responseBody = $response->getBody();
             $responseDecoded = json_decode($responseBody, true);
@@ -314,6 +359,7 @@ class LoginController extends Controller
                 ]
             ]);
         } catch (GuzzleException $e) {
+            //dd($e);
             $response = $e->getResponse();
             $responseBody = $response->getBody();
             $responseDecoded = json_decode($responseBody, true);

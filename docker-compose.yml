@@ -1,7 +1,7 @@
 version: '3'
 services:
   website-php-fpm:
-    image: php:7.2-fpm
+    build: ./docker/php-fpm/
     volumes:
       - ./:/var/www/html
       - ./docker/php-fpm/log:/var/log

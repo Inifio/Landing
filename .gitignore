@@ -13,3 +13,5 @@ yarn-error.log
 
 # PHPStorm IDE files
 .idea
+
+.DS_Store

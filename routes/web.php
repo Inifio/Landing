@@ -27,7 +27,7 @@ Route::get('/', function () {
 Route::get('/logout', '\App\Http\Controllers\Auth\LoginController@logout');
 Route::get('/login/token', 'LoginController@store');
 Route::get('/login', function () {
-    return redirect("https://api.restream.io/login?response_type=code&client_id=3b5d20d7-2860-49da-bf54-e4f8c6dad488&redirect_uri=http://127.0.0.1:8000/login/token&state=test2");
+    return redirect("https://api.restream.io/login?response_type=code&client_id=3b5d20d7-2860-49da-bf54-e4f8c6dad488&redirect_uri=http://localhost:4000/login/token&state=test2");
 });
 
 Route::get('/show/{username}', 'LoginController@show');

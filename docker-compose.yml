@@ -21,6 +21,7 @@ services:
     image: mysql:5.7
     environment:
       - MYSQL_ROOT_PASSWORD=q7z7xebM93clwzkqlaVT
+      - MYSQL_DATABASE=restream-landing
     ports:
       - "4001:3306"
     volumes:

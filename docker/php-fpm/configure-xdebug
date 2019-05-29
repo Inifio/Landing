@@ -1,0 +1,6 @@
+  #!/bin/bash
+
+  # On Mac there is `host.docker.internal`, so in order to have the same config under Linux we add the same domain name to `/etc/hosts`
+  if [[ ! `ping -c 1 host.docker.internal` ]]; then
+      echo "$(ip r | grep default | awk '{print $3; exit}') host.docker.internal" >> /etc/hosts
+  fi

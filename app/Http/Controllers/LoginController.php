@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use \GuzzleHttp\Client;
 use \GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Http\Request;
 
 use App\Users;
 use DB;
@@ -11,19 +12,19 @@ use Auth;
 
 class LoginController extends Controller
 {
-    public function store() {
+    public function store(Request $request) {
         $client = new Client();
-        $returnedCode = request('code');
+        $returnedCode = $request->input('code');
 
         if($returnedCode === null) {
-            return redirect("/")->with('error', "Error: Authentication Declined");
+            return redirect("/")->with('error', "Error: Authentication not granted.");
         }
 
         try {
             $response = $client->request('POST', 'https://api.restream.io/oauth/token', [
                 'form_params' => [
                     'grant_type'    => 'authorization_code',
-                    'redirect_uri'  => 'http://localhost:4000/login/token',
+                    'redirect_uri'  => 'http://127.0.0.1:4000/login/token',
                     'code'          => $returnedCode
                 ],
                 'auth' => [
@@ -45,7 +46,7 @@ class LoginController extends Controller
             $responseBody = $response->getBody();
             $responseDecoded = json_decode($responseBody, true);
 
-            dd($responseDecoded);
+            //dd($responseDecoded);
             return redirect("/")->with('error', $responseDecoded["error"]["message"]);
         }
 
@@ -77,7 +78,7 @@ class LoginController extends Controller
             $responseBody = $response->getBody();
             $responseDecoded = json_decode($responseBody, true);
 
-            dd($responseDecoded);
+            //dd($responseDecoded);
             return redirect("/")->with('error', $responseDecoded["error"]["message"]);
         }
 
@@ -240,7 +241,7 @@ class LoginController extends Controller
                     }
                     array_push($enabledChannels, [
                         "platformName" =>  $platform_ids[$j]["name"],
-                        "platformTitle" => $client->request('GET', 'https://api.restream.io/v2/user/channel-meta/'.$channels[$i]["id"], $params),
+                        //"platformTitle" => $client->request('GET', 'https://api.restream.io/v2/user/channel-meta/'.$channels[$i]["id"], $params),
                         "platformId" => $channels[$i]["id"],
                         "platformImage" => $platform_ids[$j]["image"]["png"],
                         "url" => $channels[$i]["url"],
@@ -281,7 +282,7 @@ class LoginController extends Controller
             $response = $client->request('POST', 'https://api.restream.io/oauth/token', [
                 'form_params' => [
                     'grant_type'    => 'refresh_token',
-                    'redirect_uri'  => 'http://localhost:4000/login/token',
+                    'redirect_uri'  => 'http://127.0.0.1:4000/login/token',
                     'refresh_token' => $user->refresh_code
                 ],
                 'auth' => [

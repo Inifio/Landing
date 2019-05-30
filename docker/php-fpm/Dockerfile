@@ -4,6 +4,8 @@ RUN apt-get update
 # RUN apt-get install -y mysql-client
 RUN docker-php-ext-install -j$(nproc) pdo_mysql
 
+RUN apt-get install -y iputils-ping iproute2
+
 COPY entrypoint.sh /
 COPY configure-xdebug /usr/local/bin/
 COPY xdebug.ini /usr/local/etc/php/conf.d/

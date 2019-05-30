@@ -1,13 +1,5 @@
 <?php
 
-use \GuzzleHttp\Client;
-use \GuzzleHttp\Exception\GuzzleException;
-use \GuzzleHttp\Psr7;
-use \GuzzleHttp\Exception\RequestException;
-use \GuzzleHttp\Exception\ServerException;
-
-use Illuminate\Http\Request;
-
 /*
 |--------------------------------------------------------------------------
 | Web Routes

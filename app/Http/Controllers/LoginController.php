@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use \GuzzleHttp\Client;
 use \GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\Request;
-
 use App\Users;
 use DB;
 use Auth;
